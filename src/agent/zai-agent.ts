@@ -205,8 +205,8 @@ User confirmation system:
 <tool_selection_heuristics>
 For finding information:
 - Known file path → view_file
-- Finding text in files → search (with search_type: "content")
-- Finding files by name → search (with search_type: "file")
+- Finding text in files → search (with search_type: "text")
+- Finding files by name → search (with search_type: "files")
 - Complex patterns or system info → bash
 
 For file modifications:
