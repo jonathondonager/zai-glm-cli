@@ -3,6 +3,7 @@ import { ToolResult } from "../types/index.js";
 import { ConfirmationService } from "../utils/confirmation-service.js";
 import * as fs from "fs-extra";
 import * as path from "path";
+import { readFile, readdir } from "fs/promises";
 
 export interface SearchResult {
   file: string;
@@ -107,9 +108,36 @@ export class SearchTool {
   }
 
   /**
-   * Execute ripgrep command with specified options
+   * Execute ripgrep command with specified options, with fallback to Node-based search
    */
   private async executeRipgrep(
+    query: string,
+    options: {
+      includePattern?: string;
+      excludePattern?: string;
+      caseSensitive?: boolean;
+      wholeWord?: boolean;
+      regex?: boolean;
+      maxResults?: number;
+      fileTypes?: string[];
+      excludeFiles?: string[];
+    }
+  ): Promise<SearchResult[]> {
+    try {
+      return await this.tryRipgrep(query, options);
+    } catch (error: any) {
+      // If ripgrep is not available (ENOENT), fall back to Node-based search
+      if (error.code === "ENOENT" || error.message?.includes("ENOENT")) {
+        return this.fallbackTextSearch(query, options);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Try to execute ripgrep
+   */
+  private tryRipgrep(
     query: string,
     options: {
       includePattern?: string;
@@ -219,6 +247,173 @@ export class SearchTool {
         reject(error);
       });
     });
+  }
+
+  /**
+   * Fallback Node-based text search when ripgrep is not available
+   */
+  private async fallbackTextSearch(
+    query: string,
+    options: {
+      includePattern?: string;
+      excludePattern?: string;
+      caseSensitive?: boolean;
+      wholeWord?: boolean;
+      regex?: boolean;
+      maxResults?: number;
+      fileTypes?: string[];
+      excludeFiles?: string[];
+    }
+  ): Promise<SearchResult[]> {
+    const results: SearchResult[] = [];
+    const maxResults = options.maxResults || 50;
+    const caseSensitive = options.caseSensitive ?? false;
+    const searchQuery = caseSensitive ? query : query.toLowerCase();
+
+    // Build regex for whole word matching if needed
+    let searchRegex: RegExp | null = null;
+    if (options.regex || options.wholeWord) {
+      const pattern = options.wholeWord ? `\\b${query}\\b` : query;
+      const flags = caseSensitive ? "g" : "gi";
+      try {
+        searchRegex = new RegExp(pattern, flags);
+      } catch {
+        // Invalid regex, fall back to string search
+      }
+    }
+
+    // Get file extension filter from includePattern (e.g., "*.ts" -> ".ts")
+    const extFilter = options.includePattern?.startsWith("*.")
+      ? options.includePattern.slice(1)
+      : null;
+
+    // Get file type extensions
+    const typeExtensions: string[] = [];
+    if (options.fileTypes) {
+      const typeMap: Record<string, string[]> = {
+        ts: [".ts", ".tsx"],
+        js: [".js", ".jsx"],
+        py: [".py"],
+        json: [".json"],
+        md: [".md"],
+        html: [".html", ".htm"],
+        css: [".css", ".scss", ".less"],
+      };
+      options.fileTypes.forEach((type) => {
+        if (typeMap[type]) {
+          typeExtensions.push(...typeMap[type]);
+        }
+      });
+    }
+
+    const walkDir = async (dir: string, depth: number = 0): Promise<void> => {
+      if (depth > 10 || results.length >= maxResults) return;
+
+      try {
+        const entries = await readdir(dir, { withFileTypes: true });
+
+        for (const entry of entries) {
+          if (results.length >= maxResults) break;
+
+          const fullPath = path.join(dir, entry.name);
+          const relativePath = path.relative(this.currentDirectory, fullPath);
+
+          // Skip hidden files/dirs
+          if (entry.name.startsWith(".")) continue;
+
+          // Skip common directories
+          if (
+            entry.isDirectory() &&
+            ["node_modules", "dist", "build", ".next", ".cache", "coverage"].includes(
+              entry.name
+            )
+          ) {
+            continue;
+          }
+
+          // Apply exclude pattern (supports simple glob patterns like *.test.ts)
+          if (options.excludePattern) {
+            const pattern = options.excludePattern;
+            // Handle glob patterns like *.test.ts or *.ts
+            if (pattern.startsWith("*")) {
+              const suffix = pattern.slice(1); // e.g., ".test.ts"
+              if (relativePath.endsWith(suffix) || entry.name.endsWith(suffix)) {
+                continue;
+              }
+            } else if (
+              relativePath.includes(pattern) ||
+              entry.name.includes(pattern)
+            ) {
+              continue;
+            }
+          }
+
+          // Apply exclude files
+          if (options.excludeFiles?.some((f) => relativePath.includes(f))) {
+            continue;
+          }
+
+          if (entry.isFile()) {
+            // Check file extension filters
+            const ext = path.extname(entry.name);
+            if (extFilter && ext !== extFilter) continue;
+            if (typeExtensions.length > 0 && !typeExtensions.includes(ext)) continue;
+
+            // Skip binary files based on extension
+            const binaryExts = [
+              ".png", ".jpg", ".jpeg", ".gif", ".ico", ".woff", ".woff2",
+              ".ttf", ".eot", ".pdf", ".zip", ".tar", ".gz", ".exe", ".dll",
+              ".so", ".dylib", ".node", ".map"
+            ];
+            if (binaryExts.includes(ext.toLowerCase())) continue;
+
+            // Search file content
+            try {
+              const content = await readFile(fullPath, "utf-8");
+              const lines = content.split("\n");
+
+              for (let i = 0; i < lines.length && results.length < maxResults; i++) {
+                const line = lines[i];
+                const searchLine = caseSensitive ? line : line.toLowerCase();
+                let match: string | null = null;
+                let column = 0;
+
+                if (searchRegex) {
+                  const regexMatch = searchRegex.exec(line);
+                  if (regexMatch) {
+                    match = regexMatch[0];
+                    column = regexMatch.index;
+                  }
+                  searchRegex.lastIndex = 0; // Reset for next search
+                } else if (searchLine.includes(searchQuery)) {
+                  column = searchLine.indexOf(searchQuery);
+                  match = line.slice(column, column + query.length);
+                }
+
+                if (match !== null) {
+                  results.push({
+                    file: relativePath,
+                    line: i + 1,
+                    column: column + 1,
+                    text: line.trim(),
+                    match,
+                  });
+                }
+              }
+            } catch {
+              // Skip files we can't read (binary, permission issues, etc.)
+            }
+          } else if (entry.isDirectory()) {
+            await walkDir(fullPath, depth + 1);
+          }
+        }
+      } catch {
+        // Skip directories we can't read
+      }
+    };
+
+    await walkDir(this.currentDirectory);
+    return results;
   }
 
   /**
