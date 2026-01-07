@@ -44,11 +44,26 @@ ZAI can now spawn specialized agents to handle complex tasks automatically:
 ### Installation
 
 ```bash
-# Install from npm (recommended)
+# Install from npm (official release)
 npm install -g @guizmo-ai/zai-cli
 
 # Or with Bun
 bun add -g @guizmo-ai/zai-cli
+```
+
+#### Install from GitHub (for forks or latest changes)
+
+```bash
+# Clone the repository
+git clone https://github.com/jonathondonager/zai-glm-cli.git
+cd zai-glm-cli
+
+# Install dependencies and link globally
+npm install
+npm install -g .
+
+# Verify installation
+zai --version
 ```
 
 ### First Run
