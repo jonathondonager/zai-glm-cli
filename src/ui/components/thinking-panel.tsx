@@ -33,7 +33,11 @@ export default function ThinkingPanel({
     return () => clearInterval(interval);
   }, [isStreaming]);
 
-  if (!isVisible || !thinkingContent) {
+  // Ensure thinkingContent is a string (defensive check)
+  const safeContent = typeof thinkingContent === 'string' ? thinkingContent : '';
+  const safeModelName = typeof modelName === 'string' ? modelName : '';
+
+  if (!isVisible || !safeContent) {
     return null;
   }
 
@@ -47,7 +51,7 @@ export default function ThinkingPanel({
     >
       <Box>
         <Text color="magenta" bold={true}>
-          💭 Thinking ({modelName})
+          💭 Thinking ({safeModelName})
         </Text>
         <Text color="gray" dimColor={true}>
           {" "}
@@ -56,7 +60,7 @@ export default function ThinkingPanel({
       </Box>
       <Box marginTop={1} flexDirection="column">
         <Text color="gray" italic={true}>
-          {thinkingContent}
+          {safeContent}
         </Text>
         {isStreaming && (
           <Box marginTop={1}>
