@@ -6,8 +6,8 @@ import * as os from "os";
  */
 const DEFAULT_USER_SETTINGS = {
     baseURL: "https://api.z.ai/api/coding/paas/v4",
-    defaultModel: "glm-4.6",
-    models: ["glm-4.6", "glm-4.5", "glm-4.5-air"],
+    defaultModel: "glm-4.7",
+    models: ["glm-4.7", "glm-4.6", "glm-4.5", "glm-4.5-air"],
     watchEnabled: false,
     watchIgnorePatterns: [
         '**/node_modules/**',
@@ -27,7 +27,7 @@ const DEFAULT_USER_SETTINGS = {
  * Default values for project settings
  */
 const DEFAULT_PROJECT_SETTINGS = {
-    model: "glm-4.6",
+    model: "glm-4.7",
 };
 /**
  * Unified settings manager that handles both user-level and project-level settings
@@ -198,7 +198,7 @@ export class SettingsManager {
         if (userDefaultModel) {
             return userDefaultModel;
         }
-        return DEFAULT_PROJECT_SETTINGS.model || "glm-4.6";
+        return DEFAULT_PROJECT_SETTINGS.model || "glm-4.7";
     }
     /**
      * Set the current model for the project

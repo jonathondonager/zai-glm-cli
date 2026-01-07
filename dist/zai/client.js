@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 export class ZaiClient {
     client;
-    currentModel = "glm-4.6"; // Modèle par défaut avec support thinking
+    currentModel = "glm-4.7"; // Modèle par défaut avec support thinking
     defaultMaxTokens;
     thinkingEnabled = false;
     apiKey;
@@ -28,7 +28,7 @@ export class ZaiClient {
     }
     supportsThinking(model) {
         // Liste des modèles qui supportent le thinking mode
-        const thinkingModels = ['glm-4.6', 'glm-4-6', 'glm-4.5', 'glm-4-5'];
+        const thinkingModels = ['glm-4.7', 'glm-4-7', 'glm-4.6', 'glm-4-6', 'glm-4.5', 'glm-4-5'];
         return thinkingModels.some(m => model.toLowerCase().includes(m));
     }
     setThinkingEnabled(enabled) {

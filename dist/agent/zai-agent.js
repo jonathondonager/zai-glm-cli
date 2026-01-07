@@ -35,7 +35,7 @@ export class ZaiAgent extends EventEmitter {
         super();
         const manager = getSettingsManager();
         const savedModel = manager.getCurrentModel();
-        const modelToUse = model || savedModel || "glm-4.6"; // Utiliser glm-4.6 par défaut
+        const modelToUse = model || savedModel || "glm-4.7"; // Utiliser glm-4.7 par défaut
         this.maxToolRounds = maxToolRounds || 400;
         this.zaiClient = new ZaiClient(apiKey, modelToUse, baseURL);
         this.textEditor = new TextEditorTool();

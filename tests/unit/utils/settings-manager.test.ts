@@ -63,13 +63,13 @@ describe('SettingsManager', () => {
     it('should get default model', () => {
       const manager = SettingsManager.getInstance();
       const model = manager.getCurrentModel();
-      expect(model).toBe('glm-4.6');
+      expect(model).toBe('glm-4.7');
     });
 
     it('should get available models', () => {
       const manager = SettingsManager.getInstance();
       const models = manager.getAvailableModels();
-      expect(models).toContain('glm-4.6');
+      expect(models).toContain('glm-4.7');
       expect(models.length).toBeGreaterThan(0);
     });
 
@@ -87,7 +87,7 @@ describe('SettingsManager', () => {
       const manager = SettingsManager.getInstance();
       const settings = manager.loadProjectSettings();
 
-      expect(settings.model).toBe('glm-4.6');
+      expect(settings.model).toBe('glm-4.7');
     });
 
     it('should set and get project model', () => {

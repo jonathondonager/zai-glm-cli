@@ -31,8 +31,8 @@ export interface ProjectSettings {
  */
 const DEFAULT_USER_SETTINGS: Partial<UserSettings> = {
   baseURL: "https://api.z.ai/api/coding/paas/v4",
-  defaultModel: "glm-4.6",
-  models: ["glm-4.6", "glm-4.5", "glm-4.5-air"],
+  defaultModel: "glm-4.7",
+  models: ["glm-4.7", "glm-4.6", "glm-4.5", "glm-4.5-air"],
   watchEnabled: false,
   watchIgnorePatterns: [
     '**/node_modules/**',
@@ -53,7 +53,7 @@ const DEFAULT_USER_SETTINGS: Partial<UserSettings> = {
  * Default values for project settings
  */
 const DEFAULT_PROJECT_SETTINGS: Partial<ProjectSettings> = {
-  model: "glm-4.6",
+  model: "glm-4.7",
 };
 
 /**
@@ -279,7 +279,7 @@ export class SettingsManager {
       return userDefaultModel;
     }
 
-    return DEFAULT_PROJECT_SETTINGS.model || "glm-4.6";
+    return DEFAULT_PROJECT_SETTINGS.model || "glm-4.7";
   }
 
   /**

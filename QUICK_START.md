@@ -9,7 +9,7 @@
 3. **macOS Banner Notifications** - Native macOS notifications + terminal beep when tasks complete or error
 4. **Fixed Scrolling** - Long threads won't break pagination anymore (shows only last 30 messages)
 5. **Error Logging** - All errors logged to `~/.zai-cli/logs/` with recovery suggestions
-6. **Model Selection** - Switch between glm-4.6, glm-4.5, and glm-4.5-air anytime with `/models`
+6. **Model Selection** - Switch between glm-4.7, glm-4.6, glm-4.5, and glm-4.5-air anytime with `/models`
 
 ## Quick Install
 
@@ -56,14 +56,16 @@ Switch between models anytime during your session:
 /models
 
 # Or directly:
+/models glm-4.7
 /models glm-4.6
 /models glm-4.5
 /models glm-4.5-air
 ```
 
 Available models:
-- **glm-4.6** - Latest and most capable (default)
-- **glm-4.5** - Previous generation, still powerful
+- **glm-4.7** - Latest and most capable (default)
+- **glm-4.6** - Previous generation, 200K context
+- **glm-4.5** - Balanced performance, 128K context
 - **glm-4.5-air** - Faster, lighter version
 
 ## Still TODO (Need More Work)

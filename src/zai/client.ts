@@ -38,7 +38,7 @@ export interface ZaiResponse {
 
 export class ZaiClient {
   private client: OpenAI;
-  private currentModel: string = "glm-4.6"; // Modèle par défaut avec support thinking
+  private currentModel: string = "glm-4.7"; // Modèle par défaut avec support thinking
   private defaultMaxTokens: number;
   private thinkingEnabled: boolean = false;
   public readonly apiKey: string;
@@ -68,7 +68,7 @@ export class ZaiClient {
 
   private supportsThinking(model: string): boolean {
     // Liste des modèles qui supportent le thinking mode
-    const thinkingModels = ['glm-4.6', 'glm-4-6', 'glm-4.5', 'glm-4-5'];
+    const thinkingModels = ['glm-4.7', 'glm-4-7', 'glm-4.6', 'glm-4-6', 'glm-4.5', 'glm-4-5'];
     return thinkingModels.some(m => model.toLowerCase().includes(m));
   }
 

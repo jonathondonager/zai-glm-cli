@@ -59,7 +59,7 @@ zai
 
 The interactive wizard will guide you through:
 1. Enter your Z.ai API key ([get one here](https://z.ai/manage-apikey/apikey-list))
-2. Select default model (GLM-4.6 recommended)
+2. Select default model (GLM-4.7 recommended)
 3. Start chatting!
 
 Configuration is saved to `~/.zai/user-settings.json`.
@@ -67,7 +67,7 @@ Configuration is saved to `~/.zai/user-settings.json`.
 ## ✨ What's Different from grok-cli?
 
 ### 🎯 GLM Model Integration
-- **Native Z.ai GLM support** - Built specifically for GLM-4.6, GLM-4.5, and GLM-4.5-Air
+- **Native Z.ai GLM support** - Built specifically for GLM-4.7, GLM-4.6, GLM-4.5, and GLM-4.5-Air
 - **200K context window** - Leverage GLM-4.6's massive context for complex projects
 - **Optimized prompting** - Tailored system prompts for GLM model reasoning patterns
 
@@ -92,6 +92,7 @@ Configuration is saved to `~/.zai/user-settings.json`.
 
 ### 🤖 Conversational AI
 Natural language interface with Z.ai GLM models:
+- **GLM-4.7** (200K context) - Latest and most capable model (recommended)
 - **GLM-4.6** (200K context) - Best for complex coding and reasoning
 - **GLM-4.5** (128K context) - Balanced performance
 - **GLM-4.5-Air** - Fast and lightweight
@@ -138,10 +139,10 @@ zai -p "run tests" --max-tool-rounds 50
 
 ```bash
 # Command line
-zai --model glm-4.6
+zai --model glm-4.7
 
 # Environment variable
-export ZAI_MODEL=glm-4.5
+export ZAI_MODEL=glm-4.7
 zai
 
 # User settings (persistent)
@@ -155,7 +156,7 @@ zai config  # Select "Change Default Model"
 ```bash
 export ZAI_API_KEY=your_api_key_here
 export ZAI_BASE_URL=https://api.z.ai/api/paas/v4  # Optional
-export ZAI_MODEL=glm-4.6                           # Optional
+export ZAI_MODEL=glm-4.7                           # Optional
 ```
 
 ### Custom Instructions
@@ -287,7 +288,7 @@ zai completion fish > ~/.config/fish/completions/zai.fish
 - **Batch Editing** - Apply changes across multiple files
 - **File Watching** - Real-time detection of external file changes
 - **Session Persistence** - Auto-save conversations to `~/.zai/sessions/`
-- **Thinking Mode** - Visualize AI reasoning with GLM-4.6
+- **Thinking Mode** - Visualize AI reasoning with GLM-4.7/GLM-4.6
 
 ## 🛠️ Development
 
@@ -323,7 +324,7 @@ Options:
   -d, --directory <dir>             Working directory
   -k, --api-key <key>               Z.ai API key
   -u, --base-url <url>              API base URL
-  -m, --model <model>               AI model (glm-4.6, glm-4.5, glm-4.5-air)
+  -m, --model <model>               AI model (glm-4.7, glm-4.6, glm-4.5, glm-4.5-air)
   -p, --prompt <prompt>             Headless mode - process and exit
   --max-tool-rounds <rounds>        Max tool executions (default: 400)
   --no-color                        Disable colored output (for CI/CD)

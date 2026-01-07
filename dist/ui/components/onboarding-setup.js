@@ -9,7 +9,7 @@ export default function OnboardingSetup({ onComplete }) {
     const [apiKeyInput, setApiKeyInput] = useState("");
     const [selectedModel, setSelectedModel] = useState(0);
     const { exit } = useApp();
-    const models = ["glm-4.6", "glm-4.5", "glm-4.5-air"];
+    const models = ["glm-4.7", "glm-4.6", "glm-4.5", "glm-4.5-air"];
     useInput((inputChar, key) => {
         if (key.ctrl && inputChar === "c") {
             exit();
@@ -75,7 +75,8 @@ export default function OnboardingSetup({ onComplete }) {
             React.createElement(Box, { marginTop: 1, flexDirection: "column" }, models.map((model, index) => (React.createElement(Box, { key: model, paddingLeft: 1 },
                 React.createElement(Text, { color: index === selectedModel ? "black" : "white", backgroundColor: index === selectedModel ? "cyan" : undefined },
                     model,
-                    model === "glm-4.6" && " (Recommended - 200K context)",
+                    model === "glm-4.7" && " (Recommended - 200K context)",
+                    model === "glm-4.6" && " (200K context)",
                     model === "glm-4.5" && " (128K context)",
                     model === "glm-4.5-air" && " (Compact & Fast)"))))),
             React.createElement(Box, { marginTop: 1 },

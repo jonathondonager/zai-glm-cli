@@ -11,7 +11,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 - Node.js 18+ (Bun-compatible)
 - React Ink for terminal UI
 - Vitest for testing (90+ tests)
-- Z.ai GLM models (GLM-4.6, GLM-4.5, GLM-4.5-Air)
+- Z.ai GLM models (GLM-4.7, GLM-4.6, GLM-4.5, GLM-4.5-Air)
 - OpenAI SDK for API communication
 - Model Context Protocol (MCP) for extensibility
 
@@ -151,7 +151,7 @@ src/
 - Context summaries generated when limit reached
 
 **Thinking Mode:**
-- GLM-4.6 and GLM-4.5 support extended thinking
+- GLM-4.7, GLM-4.6 and GLM-4.5 support extended thinking
 - Visible reasoning process displayed to user
 - Enabled by default for compatible models
 
@@ -187,7 +187,8 @@ src/
 **Base URL:** `https://api.z.ai/api/coding/paas/v4`
 
 **Models:**
-- `glm-4.6` - 200K context, best for complex coding (default)
+- `glm-4.7` - 200K context, latest and most capable (default)
+- `glm-4.6` - 200K context, best for complex coding
 - `glm-4.5` - 128K context, balanced performance
 - `glm-4.5-air` - Fast and lightweight
 
@@ -206,7 +207,7 @@ src/
 ```bash
 ZAI_API_KEY          # Z.ai API key (required)
 ZAI_BASE_URL         # API base URL (optional, defaults to Z.ai coding endpoint)
-ZAI_MODEL            # Model selection (optional, defaults to glm-4.6)
+ZAI_MODEL            # Model selection (optional, defaults to glm-4.7)
 ZAI_MAX_TOKENS       # Max tokens per response (optional, defaults to 1536)
 MORPH_API_KEY        # Morph Fast Apply key (optional, enables high-speed editing)
 ```
