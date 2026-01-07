@@ -14,8 +14,7 @@
     "zai": "dist/index.js"
   },
   "scripts": {
-    "build": "node_modules/.bin/tsc",
-    "prepare": "npm run build",
+    "build": "tsc",
     "prepublishOnly": "npm run build",
     "build:bun": "bun run tsc",
     "dev": "bun run src/index.ts",
