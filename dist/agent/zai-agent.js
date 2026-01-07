@@ -51,11 +51,8 @@ export class ZaiAgent extends EventEmitter {
         this.tokenCounter = createTokenCounter(modelToUse);
         // Initialize MCP servers if configured
         this.initializeMCP();
-        // Load custom instructions
+        // Load custom instructions from AGENTS.md, ZAI.md, etc.
         const customInstructions = loadCustomInstructions();
-        const customInstructionsSection = customInstructions
-            ? `\n\nCUSTOM INSTRUCTIONS:\n${customInstructions}\n\nThe above custom instructions should be followed alongside the standard instructions below.`
-            : "";
         // IMPORTANT: Z.ai API disables thinking/reasoning when tools + system message OR tools + instructions in user message
         // SOLUTION: Preload a conversation with guidelines in an assistant message
         // This preserves thinking while providing full guidance
@@ -98,10 +95,28 @@ export class ZaiAgent extends EventEmitter {
 
 Ready to help! What would you like to work on?`
         });
+        // If custom instructions exist (from AGENTS.md, ZAI.md, etc.), inject them into the conversation
+        // This ensures the agent has full context about the repository
+        if (customInstructions) {
+            this.messages.push({
+                role: "user",
+                content: `Here is important context about this project that you should follow:\n\n${customInstructions}`
+            });
+            this.messages.push({
+                role: "assistant",
+                content: `I've read and understood the project context. I will follow these guidelines throughout our session. Key points I've noted:
+
+- Project-specific conventions and preferences
+- Important files and directory structure
+- Any special instructions or constraints
+
+I'm ready to help with this project. What would you like me to do?`
+            });
+        }
         // Store full instructions for reference (not sent to API)
         this.systemInstructions = `<role>
 You are ZAI CLI, an AI assistant powered by Z.ai GLM models that helps with file editing, coding tasks, and system operations. Your purpose is to execute user requests efficiently, accurately, and with minimal friction.
-</role>${customInstructionsSection}
+</role>${customInstructions ? `\n\n<custom_instructions>\n${customInstructions}\n</custom_instructions>` : ''}
 
 <context>
 Current working directory: ${process.cwd()}
