@@ -82,7 +82,7 @@ export class ZaiClient {
 
   setModel(model: string): void {
     this.currentModel = model;
-    // Réactiver le thinking si le nouveau modèle le supporte
+    // Re-enable thinking if the new model supports it
     if (this.supportsThinking(model)) {
       this.thinkingEnabled = true;
     }
@@ -112,7 +112,7 @@ export class ZaiClient {
         max_tokens: this.defaultMaxTokens,
       };
 
-      // Add thinking parameter for GLM-4.6 and compatible models
+      // Add thinking parameter for GLM-4.7 and compatible models
       // L'API Z.ai retourne le thinking dans "reasoning_content"
       if (this.thinkingEnabled) {
         requestPayload.thinking = { type: "enabled" };
@@ -143,7 +143,7 @@ export class ZaiClient {
         stream: true,
       };
 
-      // Add thinking parameter for GLM-4.6 and compatible models
+      // Add thinking parameter for GLM-4.7 and compatible models
       if (this.thinkingEnabled) {
         requestPayload.thinking = { type: "enabled" };
       }

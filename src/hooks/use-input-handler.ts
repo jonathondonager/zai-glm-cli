@@ -254,7 +254,7 @@ export function useInputHandler({
       return toolResult.error || "Error occurred";
     }
 
-    // view_file : masquer le contenu des fichiers
+    // view_file: hide file contents in summary
     if (toolName === "view_file") {
       const output = toolResult.output || "";
       const lines = output.split("\n");
@@ -313,11 +313,11 @@ export function useInputHandler({
       const output = toolResult.output || "";
       const lines = output.split("\n");
 
-      // Compter les fichiers trouvés
+      // Count files found
       const fileMatches = output.match(/Found in: (.+)/g);
       const fileCount = fileMatches ? fileMatches.length : 0;
 
-      // Compter les matches totaux
+      // Count total matches
       const matchLines = lines.filter(line => line.trim() && !line.startsWith("Found in:"));
 
       return `✓ Search complete: ${fileCount} files, ${matchLines.length} matches`;
@@ -833,7 +833,7 @@ To access the full settings panel, run this command in a new terminal:
 Available settings:
   • API Key - Your Z.ai API key
   • Base URL - API endpoint (default: https://api.z.ai/api/paas/v4)
-  • Default Model - Choose between glm-4.6, glm-4.5, glm-4.5-air
+  • Default Model - Choose between glm-4.7, glm-4.6, glm-4.5, glm-4.5-air
 
 Quick commands from here:
   • /models - Switch model in current session
@@ -1279,7 +1279,7 @@ Respond with ONLY the commit message, no additional text.`;
     };
     setChatHistory((prev) => [...prev, userEntry]);
 
-    // Clear thinking content au début d'une nouvelle conversation
+    // Clear thinking content at the start of a new conversation
     if (setThinkingContent) {
       setThinkingContent("");
     }

@@ -188,7 +188,7 @@ src/
 
 **Models:**
 - `glm-4.7` - 200K context, latest and most capable (default)
-- `glm-4.6` - 200K context, best for complex coding
+- `glm-4.6` - 200K context, previous generation
 - `glm-4.5` - 128K context, balanced performance
 - `glm-4.5-air` - Fast and lightweight
 

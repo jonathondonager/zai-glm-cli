@@ -264,7 +264,7 @@ program
     .option("-d, --directory <dir>", "set working directory", process.cwd())
     .option("-k, --api-key <key>", "ZAI API key (or set ZAI_API_KEY env var)")
     .option("-u, --base-url <url>", "ZAI API base URL (or set ZAI_BASE_URL env var)")
-    .option("-m, --model <model>", "AI model to use (e.g., glm-4.6, glm-4.5) (or set ZAI_MODEL env var)")
+    .option("-m, --model <model>", "AI model to use (e.g., glm-4.7, glm-4.6) (or set ZAI_MODEL env var)")
     .option("-p, --prompt <prompt>", "process a single prompt and exit (headless mode)")
     .option("--max-tool-rounds <rounds>", "maximum number of tool execution rounds (default: 400)", "400")
     .option("-w, --watch", "watch for file changes and auto-reload context")
@@ -496,7 +496,7 @@ gitCommand
     .option("-d, --directory <dir>", "set working directory", process.cwd())
     .option("-k, --api-key <key>", "ZAI API key (or set ZAI_API_KEY env var)")
     .option("-u, --base-url <url>", "ZAI API base URL (or set ZAI_BASE_URL env var)")
-    .option("-m, --model <model>", "AI model to use (e.g., glm-4.6, glm-4.5) (or set ZAI_MODEL env var)")
+    .option("-m, --model <model>", "AI model to use (e.g., glm-4.7, glm-4.6) (or set ZAI_MODEL env var)")
     .option("--max-tool-rounds <rounds>", "maximum number of tool execution rounds (default: 400)", "400")
     .action(async (options) => {
     if (options.directory) {

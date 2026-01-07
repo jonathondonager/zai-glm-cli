@@ -46,7 +46,7 @@ export class BashTool {
       'kill ', 'killall ',
       'systemctl ', 'service ',
       'dd ', 'fdisk ', 'mkfs',
-      '>', '>>', // Redirection vers fichiers
+      '>', '>>', // File redirection
     ];
 
     for (const pattern of destructivePatterns) {

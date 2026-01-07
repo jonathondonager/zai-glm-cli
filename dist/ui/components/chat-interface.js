@@ -30,7 +30,7 @@ function ChatInterfaceWithAgent({ agent, initialMessage, initialSession, watchMo
         if (!toolResult.success) {
             return toolResult.error || "Error occurred";
         }
-        // view_file : masquer le contenu des fichiers
+        // view_file: hide file contents in summary
         if (toolName === "view_file") {
             const output = toolResult.output || "";
             const lines = output.split("\n");
@@ -85,10 +85,10 @@ function ChatInterfaceWithAgent({ agent, initialMessage, initialSession, watchMo
         if (toolName === "search") {
             const output = toolResult.output || "";
             const lines = output.split("\n");
-            // Compter les fichiers trouvés
+            // Count files found
             const fileMatches = output.match(/Found in: (.+)/g);
             const fileCount = fileMatches ? fileMatches.length : 0;
-            // Compter les matches totaux
+            // Count total matches
             const matchLines = lines.filter(line => line.trim() && !line.startsWith("Found in:"));
             return `✓ Search complete: ${fileCount} files, ${matchLines.length} matches`;
         }
@@ -248,7 +248,7 @@ function ChatInterfaceWithAgent({ agent, initialMessage, initialSession, watchMo
             const processInitialMessage = async () => {
                 actions.startProcessing();
                 actions.startStreaming();
-                // Clear thinking au début
+                // Clear thinking at the start
                 actions.clearThinkingContent();
                 try {
                     let streamingEntry = null;

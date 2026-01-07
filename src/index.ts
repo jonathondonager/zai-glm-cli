@@ -346,7 +346,7 @@ program
   )
   .option(
     "-m, --model <model>",
-    "AI model to use (e.g., glm-4.6, glm-4.5) (or set ZAI_MODEL env var)"
+    "AI model to use (e.g., glm-4.7, glm-4.6) (or set ZAI_MODEL env var)"
   )
   .option(
     "-p, --prompt <prompt>",
@@ -661,7 +661,7 @@ gitCommand
   )
   .option(
     "-m, --model <model>",
-    "AI model to use (e.g., glm-4.6, glm-4.5) (or set ZAI_MODEL env var)"
+    "AI model to use (e.g., glm-4.7, glm-4.6) (or set ZAI_MODEL env var)"
   )
   .option(
     "--max-tool-rounds <rounds>",

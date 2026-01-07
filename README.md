@@ -83,7 +83,7 @@ Configuration is saved to `~/.zai/user-settings.json`.
 
 ### 🎯 GLM Model Integration
 - **Native Z.ai GLM support** - Built specifically for GLM-4.7, GLM-4.6, GLM-4.5, and GLM-4.5-Air
-- **200K context window** - Leverage GLM-4.6's massive context for complex projects
+- **200K context window** - Leverage GLM-4.7's massive context for complex projects
 - **Optimized prompting** - Tailored system prompts for GLM model reasoning patterns
 
 ### 🚀 Interactive Onboarding
@@ -108,7 +108,7 @@ Configuration is saved to `~/.zai/user-settings.json`.
 ### 🤖 Conversational AI
 Natural language interface with Z.ai GLM models:
 - **GLM-4.7** (200K context) - Latest and most capable model (recommended)
-- **GLM-4.6** (200K context) - Best for complex coding and reasoning
+- **GLM-4.6** (200K context) - Previous generation, highly capable
 - **GLM-4.5** (128K context) - Balanced performance
 - **GLM-4.5-Air** - Fast and lightweight
 
