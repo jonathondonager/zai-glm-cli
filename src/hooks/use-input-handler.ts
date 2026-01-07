@@ -433,10 +433,9 @@ export function useInputHandler({
       return;
     }
 
-    // Handle 'T' or 't' key to toggle thinking panel when input is empty
+    // Handle Ctrl+T to toggle thinking panel
     if (
-      (inputChar === 't' || inputChar === 'T') &&
-      input === '' &&
+      inputChar === '\u0014' && // Ctrl+T
       !showCommandSuggestions &&
       !showModelSelection &&
       !isConfirmationActive &&
@@ -642,7 +641,7 @@ Enhanced Input Features:
   Ctrl+K      - Delete to end of line
   Ctrl+U      - Delete to start of line
   Shift+Tab   - Toggle auto-edit mode (bypass confirmations)
-  T           - Toggle thinking mode (show model reasoning)
+  Ctrl+T      - Toggle thinking mode (show model reasoning)
 
 Direct Commands (executed immediately):
   ls [path]   - List directory contents
@@ -1348,10 +1347,10 @@ Respond with ONLY the commit message, no additional text.`;
               );
               streamingEntry = null;
 
-              // Initialiser le compteur d'outils
+              // Initialize tool counter
               totalTools += chunk.toolCalls.length;
 
-              // Ajouter ou mettre à jour le message synthétique au thinking panel
+              // Add or update the synthetic message in thinking panel
               if (setThinkingContent) {
                 setThinkingContent(prev => {
                   const lines = prev.split('\n');
@@ -1433,7 +1432,7 @@ Respond with ONLY the commit message, no additional text.`;
               );
             }
             setIsStreaming(false);
-            // Clear le thinking à la fin
+            // Clear thinking at the end
             if (setThinkingContent) {
               setThinkingContent("");
             }
