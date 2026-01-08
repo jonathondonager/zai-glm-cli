@@ -3,7 +3,7 @@
  * Manages agent tasks, execution, and results
  */
 import { EventEmitter } from 'events';
-import { AGENT_CAPABILITIES, } from './agent-types.js';
+import { getAgentCapability, } from './agent-types.js';
 import { v4 as uuidv4 } from 'uuid';
 export class TaskOrchestrator extends EventEmitter {
     static instance;
@@ -55,7 +55,10 @@ export class TaskOrchestrator extends EventEmitter {
         this.runningTasks.add(taskId);
         this.emit('task:started', task);
         try {
-            const capability = AGENT_CAPABILITIES[task.type];
+            const capability = await getAgentCapability(task.type);
+            if (!capability) {
+                throw new Error(`Unknown agent type: ${task.type}`);
+            }
             // Build enhanced prompt with agent system prompt
             const enhancedPrompt = this.buildAgentPrompt(task.prompt, capability, config);
             // Execute with agent

@@ -47,7 +47,6 @@ export declare class TaskTool {
                 properties: {
                     agent_type: {
                         type: string;
-                        enum: string[];
                         description: string;
                     };
                     task_description: {

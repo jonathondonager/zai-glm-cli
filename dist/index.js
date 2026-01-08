@@ -13,6 +13,7 @@ import SettingsPanel from "./ui/components/settings-panel.js";
 import { getSettingsManager } from "./utils/settings-manager.js";
 import { ConfirmationService } from "./utils/confirmation-service.js";
 import { createMCPCommand } from "./commands/mcp.js";
+import { createSkillCommand } from "./commands/skill.js";
 import { getMetricsCollector } from "./utils/metrics.js";
 import { getSessionManager } from "./utils/session-manager.js";
 import { readFileSync } from "fs";
@@ -340,6 +341,15 @@ program
         const agent = new ZaiAgent(apiKey, baseURL, model, maxToolRounds);
         console.log("🤖 Starting ZAI CLI Conversational Assistant...\n");
         ensureUserSettingsDirectory();
+        // Load custom skills
+        try {
+            const { getSkillLoader } = await import('./agents/skill-loader.js');
+            const skillLoader = getSkillLoader();
+            await skillLoader.loadAllSkills();
+        }
+        catch (error) {
+            // Silently ignore skill loading errors
+        }
         // Support variadic positional arguments for multi-word initial message
         const initialMessage = Array.isArray(message)
             ? message.join(" ")
@@ -531,6 +541,8 @@ gitCommand
 });
 // MCP command
 program.addCommand(createMCPCommand());
+// Skill command
+program.addCommand(createSkillCommand());
 // Session list command
 program
     .command("sessions")

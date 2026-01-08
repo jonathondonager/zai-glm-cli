@@ -2,7 +2,8 @@
  * Agent System Types
  * Defines specialized agents for different tasks
  */
-export type AgentType = 'general-purpose' | 'code-reviewer' | 'test-writer' | 'documentation' | 'refactoring' | 'debugging' | 'security-audit' | 'performance-optimizer' | 'explore' | 'plan';
+export type BuiltInAgentType = 'general-purpose' | 'code-reviewer' | 'test-writer' | 'documentation' | 'refactoring' | 'debugging' | 'security-audit' | 'performance-optimizer' | 'explore' | 'plan';
+export type AgentType = BuiltInAgentType | string;
 export interface AgentCapability {
     name: string;
     description: string;
@@ -42,4 +43,21 @@ export interface AgentConfig {
     tools?: string[];
     customSystemPrompt?: string;
 }
-export declare const AGENT_CAPABILITIES: Record<AgentType, AgentCapability>;
+export declare const AGENT_CAPABILITIES: Record<BuiltInAgentType, AgentCapability>;
+/**
+ * Get agent capability by type (all agents are now loaded from skill files)
+ */
+export declare function getAgentCapability(agentType: AgentType): Promise<AgentCapability | undefined>;
+/**
+ * Synchronous version of getAgentCapability for cases where async is not possible
+ */
+export declare function getAgentCapabilitySync(agentType: AgentType): AgentCapability | undefined;
+/**
+ * Check if an agent type is a built-in type
+ * Built-in agents are those that ship with the CLI in the skills/ directory
+ */
+export declare function isBuiltInAgent(agentType: AgentType): boolean;
+/**
+ * Get all available agent types (all loaded from skill files)
+ */
+export declare function getAllAgentTypes(): Promise<AgentType[]>;

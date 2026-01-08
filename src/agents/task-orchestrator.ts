@@ -10,7 +10,7 @@ import {
   AgentTask,
   AgentResult,
   AgentConfig,
-  AGENT_CAPABILITIES,
+  getAgentCapability,
 } from './agent-types.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -82,7 +82,11 @@ export class TaskOrchestrator extends EventEmitter {
     this.emit('task:started', task);
 
     try {
-      const capability = AGENT_CAPABILITIES[task.type];
+      const capability = await getAgentCapability(task.type);
+
+      if (!capability) {
+        throw new Error(`Unknown agent type: ${task.type}`);
+      }
 
       // Build enhanced prompt with agent system prompt
       const enhancedPrompt = this.buildAgentPrompt(
@@ -186,7 +190,7 @@ export class TaskOrchestrator extends EventEmitter {
    */
   private buildAgentPrompt(
     userPrompt: string,
-    capability: typeof AGENT_CAPABILITIES[AgentType],
+    capability: import('./agent-types.js').AgentCapability,
     config?: Partial<AgentConfig>
   ): string {
     const systemPrompt = config?.customSystemPrompt || capability.systemPrompt;

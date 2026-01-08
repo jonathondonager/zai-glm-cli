@@ -4,7 +4,6 @@
  * without polluting the main context
  */
 import { getTaskOrchestrator } from '../agents/task-orchestrator.js';
-import { AGENT_CAPABILITIES } from '../agents/agent-types.js';
 import { ZaiAgent } from '../agent/zai-agent.js';
 export class TaskTool {
     parentAgent = null;
@@ -20,20 +19,21 @@ export class TaskTool {
     async execute(params) {
         try {
             const { agent_type, task_description, thoroughness = 'medium' } = params;
-            // Validate agent type
-            if (!AGENT_CAPABILITIES[agent_type]) {
-                return {
-                    success: false,
-                    error: `Unknown agent type: ${agent_type}. Available types: ${Object.keys(AGENT_CAPABILITIES).join(', ')}`,
-                };
-            }
             if (!this.parentAgent) {
                 return {
                     success: false,
                     error: 'Parent agent not set. Cannot spawn sub-agent.',
                 };
             }
-            const capability = AGENT_CAPABILITIES[agent_type];
+            // Load capability from skill system
+            const { getAgentCapability } = await import('../agents/agent-types.js');
+            const capability = await getAgentCapability(agent_type);
+            if (!capability) {
+                return {
+                    success: false,
+                    error: `Unknown agent type: ${agent_type}. Run 'zai skill list' to see available skills.`,
+                };
+            }
             // Notify parent agent that we're starting the sub-agent
             this.parentAgent.addAgentActivity(agent_type, capability.name, 'starting');
             // Create a new isolated agent for this task
@@ -80,7 +80,8 @@ export class TaskTool {
             // Notify parent that agent failed with error
             const errorMessage = `Task tool error: ${error.message}`;
             if (this.parentAgent) {
-                const capability = AGENT_CAPABILITIES[params.agent_type];
+                const { getAgentCapability } = await import('../agents/agent-types.js');
+                const capability = await getAgentCapability(params.agent_type);
                 if (capability) {
                     this.parentAgent.addAgentActivity(params.agent_type, capability.name, 'failed', undefined, undefined, errorMessage);
                 }
@@ -161,8 +162,7 @@ Example: If user asks "review the auth module", use code-reviewer agent.`,
                     properties: {
                         agent_type: {
                             type: 'string',
-                            enum: Object.keys(AGENT_CAPABILITIES),
-                            description: 'Type of specialized agent to use',
+                            description: 'Type of specialized agent to use. Built-in: general-purpose, code-reviewer, test-writer, documentation, refactoring, debugging, security-audit, performance-optimizer, explore, plan. Or any custom skill ID. Run "zai skill list" to see all available skills.',
                         },
                         task_description: {
                             type: 'string',

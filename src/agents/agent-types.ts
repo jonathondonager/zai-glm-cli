@@ -3,7 +3,8 @@
  * Defines specialized agents for different tasks
  */
 
-export type AgentType =
+// Built-in agent types
+export type BuiltInAgentType =
   | 'general-purpose'
   | 'code-reviewer'
   | 'test-writer'
@@ -14,6 +15,9 @@ export type AgentType =
   | 'performance-optimizer'
   | 'explore'
   | 'plan';
+
+// AgentType can be a built-in or any custom skill ID
+export type AgentType = BuiltInAgentType | string;
 
 export interface AgentCapability {
   name: string;
@@ -59,148 +63,69 @@ export interface AgentConfig {
 }
 
 // Agent capability definitions
-export const AGENT_CAPABILITIES: Record<AgentType, AgentCapability> = {
-  'general-purpose': {
-    name: 'General Purpose',
-    description: 'Handles general coding tasks, file operations, and command execution',
-    tools: ['view_file', 'edit_file', 'str_replace', 'bash', 'search', 'batch_edit'],
-    systemPrompt: `You are a general-purpose AI coding assistant. You can:
-- Read, edit, and create files
-- Execute bash commands
-- Search through codebases
-- Make batch edits across multiple files
-Help the user with their coding tasks efficiently.`,
-    maxRounds: 50,
-  },
+// NOTE: Built-in agents are now defined as skill files in the skills/ directory
+// This object is kept for backward compatibility but is empty
+export const AGENT_CAPABILITIES: Record<BuiltInAgentType, AgentCapability> = {} as any;
 
-  'code-reviewer': {
-    name: 'Code Reviewer',
-    description: 'Reviews code for quality, bugs, and best practices',
-    tools: ['view_file', 'search', 'bash'],
-    systemPrompt: `You are a meticulous code reviewer. Review code for:
-- Code quality and maintainability
-- Potential bugs and edge cases
-- Security vulnerabilities
-- Performance issues
-- Best practices and patterns
-- Test coverage gaps
-Provide actionable feedback with specific line numbers and suggestions.`,
-    maxRounds: 30,
-  },
+/**
+ * Get agent capability by type (all agents are now loaded from skill files)
+ */
+export async function getAgentCapability(agentType: AgentType): Promise<AgentCapability | undefined> {
+  try {
+    const { getSkillLoader } = await import('./skill-loader.js');
+    const skillLoader = getSkillLoader();
+    const skill = skillLoader.getSkill(agentType);
 
-  'test-writer': {
-    name: 'Test Writer',
-    description: 'Writes comprehensive unit and integration tests',
-    tools: ['view_file', 'edit_file', 'str_replace', 'bash', 'search'],
-    systemPrompt: `You are a test automation specialist. Write comprehensive tests that:
-- Cover edge cases and error scenarios
-- Follow testing best practices
-- Use appropriate testing frameworks
-- Include setup/teardown when needed
-- Are maintainable and readable
-Focus on high-quality, thorough test coverage.`,
-    maxRounds: 40,
-  },
+    if (skill) {
+      return skillLoader.skillToCapability(skill);
+    }
+  } catch (error) {
+    // Skill loader not available or skill not found
+  }
 
-  'documentation': {
-    name: 'Documentation Writer',
-    description: 'Creates and updates technical documentation',
-    tools: ['view_file', 'edit_file', 'str_replace', 'search'],
-    systemPrompt: `You are a technical documentation specialist. Create clear, comprehensive documentation:
-- API documentation with examples
-- README files with usage instructions
-- Code comments and JSDoc
-- Architecture diagrams (in markdown)
-- User guides and tutorials
-Make documentation accessible to all skill levels.`,
-    maxRounds: 30,
-  },
+  return undefined;
+}
 
-  'refactoring': {
-    name: 'Refactoring Expert',
-    description: 'Refactors code for better structure and maintainability',
-    tools: ['view_file', 'edit_file', 'str_replace', 'batch_edit', 'search'],
-    systemPrompt: `You are a refactoring expert. Improve code structure by:
-- Removing duplication
-- Improving naming
-- Extracting functions/classes
-- Applying design patterns
-- Maintaining backward compatibility
-- Ensuring tests still pass
-Make changes incrementally and safely.`,
-    maxRounds: 50,
-  },
+/**
+ * Synchronous version of getAgentCapability for cases where async is not possible
+ */
+export function getAgentCapabilitySync(agentType: AgentType): AgentCapability | undefined {
+  // All capabilities are now loaded from skill files, which requires async
+  // Caller should use async version
+  return undefined;
+}
 
-  'debugging': {
-    name: 'Debugger',
-    description: 'Diagnoses and fixes bugs in code',
-    tools: ['view_file', 'edit_file', 'str_replace', 'bash', 'search'],
-    systemPrompt: `You are a debugging specialist. When fixing bugs:
-- Analyze error messages and stack traces
-- Identify root causes, not just symptoms
-- Add logging/debugging output when needed
-- Test fixes thoroughly
-- Explain what caused the bug
-- Suggest preventive measures
-Be methodical and thorough in your investigation.`,
-    maxRounds: 40,
-  },
+/**
+ * Check if an agent type is a built-in type
+ * Built-in agents are those that ship with the CLI in the skills/ directory
+ */
+export function isBuiltInAgent(agentType: AgentType): boolean {
+  // List of built-in agent IDs that ship with the CLI
+  const builtInAgents: BuiltInAgentType[] = [
+    'general-purpose',
+    'code-reviewer',
+    'test-writer',
+    'documentation',
+    'refactoring',
+    'debugging',
+    'security-audit',
+    'performance-optimizer',
+    'explore',
+    'plan',
+  ];
+  return builtInAgents.includes(agentType as BuiltInAgentType);
+}
 
-  'security-audit': {
-    name: 'Security Auditor',
-    description: 'Audits code for security vulnerabilities',
-    tools: ['view_file', 'search', 'bash'],
-    systemPrompt: `You are a security auditor. Check for:
-- SQL injection vulnerabilities
-- XSS and CSRF risks
-- Authentication/authorization issues
-- Sensitive data exposure
-- Dependency vulnerabilities
-- Input validation gaps
-Provide severity ratings and remediation steps.`,
-    maxRounds: 30,
-  },
-
-  'performance-optimizer': {
-    name: 'Performance Optimizer',
-    description: 'Analyzes and optimizes code performance',
-    tools: ['view_file', 'edit_file', 'str_replace', 'bash', 'search'],
-    systemPrompt: `You are a performance optimization expert. Optimize for:
-- Time complexity (reduce O(n²) algorithms)
-- Memory usage
-- Database query efficiency
-- Bundle size
-- Network requests
-- Caching opportunities
-Measure before and after, provide benchmarks.`,
-    maxRounds: 40,
-  },
-
-  'explore': {
-    name: 'Codebase Explorer',
-    description: 'Explores and understands codebases quickly',
-    tools: ['view_file', 'search', 'bash'],
-    systemPrompt: `You are a codebase explorer. Your goal is to understand:
-- Project structure and architecture
-- Key files and entry points
-- Dependencies and relationships
-- Code patterns and conventions
-- Configuration and setup
-Be thorough but efficient. Use search and grep strategically.`,
-    maxRounds: 20,
-  },
-
-  'plan': {
-    name: 'Task Planner',
-    description: 'Creates detailed implementation plans',
-    tools: ['view_file', 'search'],
-    systemPrompt: `You are a task planning specialist. Create detailed plans that:
-- Break down complex tasks into steps
-- Identify dependencies
-- Estimate effort
-- Consider edge cases
-- Provide clear acceptance criteria
-Your plans should be actionable and comprehensive.`,
-    maxRounds: 15,
-  },
-};
+/**
+ * Get all available agent types (all loaded from skill files)
+ */
+export async function getAllAgentTypes(): Promise<AgentType[]> {
+  try {
+    const { getSkillLoader } = await import('./skill-loader.js');
+    const skillLoader = getSkillLoader();
+    const allSkills = skillLoader.getAllSkills().map((s) => s.id);
+    return allSkills;
+  } catch (error) {
+    return [];
+  }
+}
