@@ -18,18 +18,45 @@ export declare class SkillLoader {
     private static instance;
     private skills;
     private skillPaths;
-    private constructor();
+    private builtInSkillsPath;
+    private loadingPromise;
+    private loadErrors;
+    constructor(skillPaths?: string[]);
     static getInstance(): SkillLoader;
     /**
-     * Initialize skill search paths (in order of precedence)
+     * Reset the singleton instance (useful for testing)
+     */
+    static resetInstance(): void;
+    /**
+     * Initialize skill search paths (in order of loading)
+     * Later paths override earlier ones, so the order is:
+     * built-in → user global → project-local (highest precedence wins)
      */
     private initializeSkillPaths;
     /**
      * Load all skills from configured paths
+     * @returns Number of custom skills loaded (excludes built-in)
+     *
+     * This method is protected by a loading lock to prevent race conditions.
+     * Concurrent calls will wait for the in-progress load to complete.
      */
-    loadAllSkills(): Promise<void>;
+    loadAllSkills(): Promise<number>;
+    /**
+     * Internal method that does the actual loading
+     * Called by loadAllSkills() which provides the locking mechanism
+     */
+    private doLoadAllSkills;
+    /**
+     * Get errors that occurred during the last loadAllSkills() call
+     * Returns a deep copy to prevent external mutation
+     */
+    getLoadErrors(): Array<{
+        file: string;
+        error: string;
+    }>;
     /**
      * Load skills from a specific directory
+     * @returns Result with count of loaded skills and any errors
      */
     private loadSkillsFromDirectory;
     /**
@@ -60,6 +87,11 @@ export declare class SkillLoader {
      * Convert skill definition to AgentCapability format
      */
     skillToCapability(skill: SkillDefinition): AgentCapability;
+    /**
+     * Get capability for an agent type
+     * Convenience method that combines getSkill() and skillToCapability()
+     */
+    getCapability(agentType: string): AgentCapability | undefined;
     /**
      * Reload skills from disk
      */

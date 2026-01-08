@@ -43,9 +43,20 @@ export interface AgentConfig {
     tools?: string[];
     customSystemPrompt?: string;
 }
-export declare const AGENT_CAPABILITIES: Record<BuiltInAgentType, AgentCapability>;
 /**
- * Get agent capability by type (all agents are now loaded from skill files)
+ * Agent capability definitions
+ *
+ * @deprecated Direct access to AGENT_CAPABILITIES is deprecated.
+ * Use getAgentCapability() instead for lazy-loaded, cached capabilities.
+ *
+ * This object is now empty and kept only for backward compatibility.
+ * All capabilities are loaded on-demand from skill files to avoid blocking
+ * the event loop at module initialization time.
+ */
+export declare const AGENT_CAPABILITIES: Partial<Record<BuiltInAgentType, AgentCapability>>;
+/**
+ * Get agent capability by type (all agents are loaded from skill files)
+ * Results are cached automatically by the skill loader for performance
  */
 export declare function getAgentCapability(agentType: AgentType): Promise<AgentCapability | undefined>;
 /**

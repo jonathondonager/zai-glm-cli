@@ -474,9 +474,21 @@ program
       try {
         const { getSkillLoader } = await import('./agents/skill-loader.js');
         const skillLoader = getSkillLoader();
-        await skillLoader.loadAllSkills();
+        const loadedCount = await skillLoader.loadAllSkills();
+
+        if (loadedCount > 0) {
+          console.log(`✓ Loaded ${loadedCount} custom skill(s)`);
+        }
+
+        // Report any errors that occurred during loading
+        const errors = skillLoader.getLoadErrors();
+        if (errors.length > 0) {
+          console.warn(`⚠️  Warning: ${errors.length} skill(s) failed to load:`);
+          errors.forEach(({ file, error }) => console.warn(`   - ${file}: ${error}`));
+        }
       } catch (error) {
-        // Silently ignore skill loading errors
+        console.warn('⚠️  Warning: Failed to load custom skills:', error instanceof Error ? error.message : String(error));
+        console.warn('   Built-in skills are still available. Run "zai skill list" to see available skills.');
       }
 
       // Support variadic positional arguments for multi-word initial message

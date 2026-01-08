@@ -62,28 +62,33 @@ export interface AgentConfig {
   customSystemPrompt?: string;
 }
 
-// Agent capability definitions
-// NOTE: Built-in agents are now defined as skill files in the skills/ directory
-// This object is kept for backward compatibility but is empty
-export const AGENT_CAPABILITIES: Record<BuiltInAgentType, AgentCapability> = {} as any;
+/**
+ * Agent capability definitions
+ *
+ * @deprecated Direct access to AGENT_CAPABILITIES is deprecated.
+ * Use getAgentCapability() instead for lazy-loaded, cached capabilities.
+ *
+ * This object is now empty and kept only for backward compatibility.
+ * All capabilities are loaded on-demand from skill files to avoid blocking
+ * the event loop at module initialization time.
+ */
+export const AGENT_CAPABILITIES: Partial<Record<BuiltInAgentType, AgentCapability>> = {};
 
 /**
- * Get agent capability by type (all agents are now loaded from skill files)
+ * Get agent capability by type (all agents are loaded from skill files)
+ * Results are cached automatically by the skill loader for performance
  */
 export async function getAgentCapability(agentType: AgentType): Promise<AgentCapability | undefined> {
   try {
     const { getSkillLoader } = await import('./skill-loader.js');
     const skillLoader = getSkillLoader();
-    const skill = skillLoader.getSkill(agentType);
 
-    if (skill) {
-      return skillLoader.skillToCapability(skill);
-    }
+    // Use the skill loader's cached getCapability method
+    return skillLoader.getCapability(agentType);
   } catch (error) {
     // Skill loader not available or skill not found
+    return undefined;
   }
-
-  return undefined;
 }
 
 /**
