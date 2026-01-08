@@ -6,7 +6,7 @@
 
 > A conversational AI CLI tool powered by Z.ai GLM models with intelligent text editing and tool usage.
 
-Forked from [superagent-ai/grok-cli](https://github.com/superagent-ai/grok-cli) and enhanced with advanced features for the Z.ai GLM ecosystem.
+Forked from [superagent-ai/grok-cli](https://github.com/superagent-ai/grok-cli) and enhanced with advanced features for the Z.ai GLM ecosystem. Then forked from [guizmo-ai/zai-cli](https://github.com/guizmo-ai/zai-glm-cli) and enhanced further with Claude. 
 
 ![ZAI CLI Screenshot](./assets/screenshot.png)
 
@@ -43,14 +43,6 @@ ZAI can now spawn specialized agents to handle complex tasks automatically:
 
 ### Installation
 
-```bash
-# Install from npm (official release)
-npm install -g @guizmo-ai/zai-cli
-
-# Or with Bun
-bun add -g @guizmo-ai/zai-cli
-```
-
 #### Install from GitHub (for forks or latest changes)
 
 ```bash
@@ -61,6 +53,9 @@ cd zai-glm-cli
 # Install dependencies and link globally
 npm install
 npm install -g .
+
+# OR
+npm install && npm run build && npm link
 
 # Verify installation
 zai --version
