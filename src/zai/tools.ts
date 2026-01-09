@@ -18,6 +18,13 @@ USE WHEN:
 - You want to inspect code, configuration files, or documentation
 - You need to understand the context before making changes
 
+DO NOT USE WHEN:
+- You need to search for text across multiple files (use search instead)
+- You need to find files by name pattern (use search with search_type: "files")
+- You need to execute a command (use bash instead)
+
+BEFORE CALLING: Ask yourself - do I know the exact file path? If not, use search first.
+
 PARAMETERS:
 - path: Absolute or relative file/directory path to view
 - start_line (optional): First line number to display for large files (1-indexed)
@@ -27,6 +34,11 @@ RETURNS:
 - File contents with line numbers (for files)
 - Directory listing with file/folder names (for directories)
 - Error message if path doesn't exist or can't be read
+
+IF THIS FAILS:
+- "File not found" → Check the path spelling, try viewing parent directory first
+- "Permission denied" → The file may be protected, inform the user
+- "Is a directory" → Add a trailing slash or use without line range parameters
 
 BEST PRACTICES:
 - Always view before editing existing files to avoid conflicts
@@ -66,6 +78,13 @@ USE WHEN:
 - You're generating documentation, tests, or build artifacts
 - You need to write initial boilerplate or templates
 
+DO NOT USE WHEN:
+- The file already exists (use str_replace_editor or edit_file instead)
+- You want to modify an existing file (use str_replace_editor)
+- You're not sure if the file exists (use view_file to check first!)
+
+CRITICAL: Using create_file on an existing file will FAIL. Always verify with view_file first if uncertain.
+
 PARAMETERS:
 - path: Full file path where the new file should be created (including filename)
 - content: Complete text content to write to the file
@@ -74,6 +93,11 @@ RETURNS:
 - Success confirmation with the created file path
 - Error if file already exists at that path
 - Error if parent directory doesn't exist or write permission denied
+
+IF THIS FAILS:
+- "File already exists" → Use str_replace_editor to modify the existing file instead
+- "No such directory" → Create the parent directory first with bash: mkdir -p /path/to/dir
+- "Permission denied" → The directory may be protected, inform the user
 
 BEST PRACTICES:
 - Use view_file first to verify the file doesn't already exist
@@ -110,9 +134,17 @@ USE WHEN:
 - You're making single-line or small multi-line edits
 - You want to rename identifiers across a file (with replace_all)
 
+DO NOT USE WHEN:
+- The file doesn't exist yet (use create_file instead)
+- You haven't viewed the file yet (view_file first!)
+- You need to create a new file from scratch (use create_file)
+- Making the same change across multiple files (use batch_edit)
+
+CRITICAL: You MUST use view_file before using this tool. Edits without viewing first often fail due to incorrect assumptions about whitespace, indentation, or exact content.
+
 PARAMETERS:
 - path: Path to the file to edit
-- old_str: Exact text to find and replace (must match precisely for single occurrence)
+- old_str: Exact text to find and replace (must match EXACTLY including whitespace and indentation)
 - new_str: Text to replace the old string with
 - replace_all (optional): If true, replaces all occurrences; if false/omitted, replaces only first occurrence
 
@@ -122,8 +154,14 @@ RETURNS:
 - Error if old_str is ambiguous (appears multiple times when replace_all is false)
 - File contents preview showing the changes made
 
+IF THIS FAILS:
+- "String not found" → You likely have incorrect whitespace/indentation. View the file again and copy the exact text.
+- "Multiple matches found" → Make old_str more specific by including surrounding lines, OR use replace_all=true if you want to replace all.
+- "File not found" → Check the path, the file may need to be created with create_file instead.
+
 BEST PRACTICES:
 - Always use view_file first to see exact content and formatting
+- Copy old_str directly from the view_file output to ensure exact match
 - Include enough context in old_str to make it unique when not using replace_all
 - Preserve exact indentation and whitespace from the original
 - Use replace_all=true for renaming variables/functions throughout a file
@@ -170,6 +208,13 @@ USE WHEN:
 - You need to check system information or environment variables
 - You want to install dependencies or manage packages
 
+DO NOT USE WHEN:
+- You just want to read a file's contents (use view_file instead - it's faster and shows line numbers)
+- You're searching for text in files (use search instead - it's optimized for this)
+- You need to edit a file (use str_replace_editor or edit_file instead)
+
+BEFORE CALLING: Consider if there's a specialized tool that does this better. bash is powerful but other tools provide better feedback.
+
 PARAMETERS:
 - command: The complete bash command to execute (single string)
 
@@ -178,6 +223,12 @@ RETURNS:
 - Error output (stderr) if the command fails
 - Exit code indicating success (0) or failure (non-zero)
 - Combined stdout/stderr for comprehensive feedback
+
+IF THIS FAILS:
+- "Command not found" → Check spelling, the tool may not be installed
+- "Permission denied" → May need different permissions, inform the user
+- "No such file or directory" → Verify the path exists before the operation
+- Timeout → Command took too long, try breaking it into smaller operations
 
 BEST PRACTICES:
 - Use absolute paths when possible to avoid ambiguity
@@ -213,6 +264,13 @@ USE WHEN:
 - You want to understand how a feature is implemented across files
 - You're looking for all occurrences of a pattern to make consistent changes
 
+DO NOT USE WHEN:
+- You already know the exact file path (use view_file instead - it's faster)
+- You need to execute a command or see system info (use bash)
+- You need to make edits (use str_replace_editor after finding the file)
+
+BEFORE CALLING: Think about what you're searching for. Use search_type='files' if looking for a filename, search_type='text' if looking for content inside files.
+
 PARAMETERS:
 - query: Text to search for or file name/path pattern (required)
 - search_type: 'text' (search file contents), 'files' (search file names), or 'both' (default: 'both')
@@ -230,6 +288,13 @@ RETURNS:
 - List of matching file paths (for file name search)
 - Number of total matches found
 - Preview of matched content with surrounding context
+
+IF THIS FAILS OR RETURNS NO RESULTS:
+- Try broader search terms (remove specific words)
+- Check spelling of the query
+- Try different search_type (maybe you meant 'files' instead of 'text')
+- Remove file_types restriction if set
+- Try case_sensitive=false if you're unsure about casing
 
 BEST PRACTICES:
 - Start with broad searches, then narrow with include/exclude patterns

@@ -27,6 +27,12 @@ import { ErrorHandler } from "../utils/error-handler.js";
 import { ToolExecutionError, APIError } from "../errors/index.js";
 import { StreamProcessor } from "./stream-processor.js";
 import { createChatStateMachine, type ChatState } from "./chat-state-machine.js";
+import {
+  extractCriticalInfo as extractCriticalInfoUtil,
+  detectStuckPattern as detectStuckPatternUtil,
+  findMostCommonTool,
+  type ToolResult as AgentToolResult
+} from "./agent-utils.js";
 
 export interface ChatEntry {
   type: "user" | "assistant" | "tool_result" | "tool_call" | "agent_activity";
@@ -77,6 +83,13 @@ export class ZaiAgent extends EventEmitter {
   private readonly MAX_MESSAGES = 50; // Adjust based on average token count
   private readonly KEEP_RECENT_MESSAGES = 20; // Always keep recent context
   private contextSummary: string = "";
+
+  // Loop detection and recovery state
+  private readonly MAX_CONSECUTIVE_FAILURES = 3; // Max failures before injecting reflection
+  private readonly STUCK_DETECTION_WINDOW = 5; // Number of recent tool calls to check for patterns
+  private readonly MAX_REFLECTIONS_PER_TURN = 2; // Prevent infinite reflection loops
+  private recentToolResults: { tool: string; success: boolean; error?: string }[] = [];
+  private reflectionCount: number = 0; // Track reflections in current turn
 
   constructor(
     apiKey: string,
@@ -130,18 +143,32 @@ export class ZaiAgent extends EventEmitter {
 **How I work:**
 1. **Read before edit**: I always use view_file to read files before modifying them
 2. **Primary editing tool**: str_replace_editor for precise, targeted file modifications
-3. **Planning**: For complex multi-step tasks (4+ steps), I create a todo list first using create_todo_list
+3. **Planning**: For complex multi-step tasks (4+ steps), I create a todo list first
 4. **Verification**: I verify file existence before creating new files
 5. **Concise communication**: I focus on actions over conversation
 
+**My reasoning approach:**
+Before taking action, I think through:
+- What exactly is being asked? What is the expected outcome?
+- What information do I need? Do I need to search or view files first?
+- What's the best tool for this task? Is there a more specific tool than bash?
+- What could go wrong? How do I handle potential errors?
+- After completing, did I achieve what was asked?
+
 **Tool selection guide:**
 - Known file path → view_file
-- Find text in files → search (type: "content")
-- Find files by name → search (type: "file")
-- Edit existing file → str_replace_editor (after viewing it)
-- Create new file → create_file (after verifying it doesn't exist)
+- Find text in files → search (type: "text")
+- Find files by name → search (type: "files")
+- Edit existing file → str_replace_editor (ALWAYS view first)
+- Create new file → create_file (verify it doesn't exist first)
 - System commands → bash
 - Multiple file changes → batch_edit or create todo list first
+
+**Error recovery approach:**
+- If a tool fails, I analyze the error message carefully
+- I try alternative approaches (e.g., different tool, different parameters)
+- I don't repeat the same failed operation - I adapt
+- Maximum 2-3 retries before explaining the issue
 
 **Task complexity:**
 - **Simple** (1-3 steps): Act immediately
@@ -345,19 +372,39 @@ USER REQUEST:
   }
 
   /**
+   * Extracts critical information from messages that should be preserved verbatim
+   * Delegates to the utility function for testability
+   */
+  private extractCriticalInfo(messages: ZaiMessage[]): string[] {
+    const contents = messages.map(msg =>
+      typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+    );
+    return extractCriticalInfoUtil(contents);
+  }
+
+  /**
    * Summarizes a range of conversation messages into a concise summary
    * Focuses on key decisions, file modifications, findings, and state
+   * Preserves critical information verbatim while summarizing the rest
    */
   private async summarizeContext(messages: ZaiMessage[]): Promise<string> {
     try {
-      const summaryPrompt = `Summarize this conversation history concisely, focusing on:
-- Key decisions made
-- Files created or modified
-- Important findings or results
-- Current project state
-- Any pending tasks or issues
+      // Extract critical info to preserve verbatim
+      const criticalInfo = this.extractCriticalInfo(messages);
+      const criticalSection = criticalInfo.length > 0
+        ? `\n\nCRITICAL INFO (preserved verbatim):\n${criticalInfo.join('\n')}`
+        : '';
 
-Keep the summary under 500 tokens.
+      const summaryPrompt = `Summarize this conversation history concisely, focusing on:
+- Key decisions made and their rationale
+- Files created, modified, or deleted (with paths)
+- Important findings, discoveries, or search results
+- Current project state and working directory context
+- Any pending tasks, blockers, or issues that need follow-up
+- Any user preferences or constraints expressed
+
+Be factual and specific. Include file paths and line numbers where relevant.
+Keep the summary under 400 tokens to leave room for critical info.
 
 Conversation to summarize:
 ${JSON.stringify(messages, null, 2)}`;
@@ -365,7 +412,7 @@ ${JSON.stringify(messages, null, 2)}`;
       const summaryMessages: ZaiMessage[] = [
         {
           role: "system",
-          content: "You are a conversation summarizer. Create concise, factual summaries focusing on actions taken and key information."
+          content: "You are a conversation summarizer for a coding assistant. Create concise, factual summaries that preserve actionable information. Always include specific file paths, function names, and error messages when they appear in the conversation."
         },
         {
           role: "user",
@@ -376,9 +423,14 @@ ${JSON.stringify(messages, null, 2)}`;
       const response = await this.zaiClient.chat(summaryMessages, []);
       const summary = response.choices[0]?.message?.content || "Unable to generate summary.";
 
-      return summary;
+      return summary + criticalSection;
     } catch (error: any) {
       console.warn("Failed to summarize context:", error.message);
+      // Fallback: at least preserve critical info
+      const criticalInfo = this.extractCriticalInfo(messages);
+      if (criticalInfo.length > 0) {
+        return `Previous context summarization failed. Critical info preserved:\n${criticalInfo.join('\n')}`;
+      }
       return "Previous context summarization failed.";
     }
   }
@@ -427,6 +479,46 @@ ${summary}
       console.warn("Context management failed:", error.message);
       // If context management fails, continue without compression
     }
+  }
+
+  /**
+   * Records a tool result for stuck detection
+   */
+  private recordToolResult(tool: string, success: boolean, error?: string): void {
+    this.recentToolResults.push({ tool, success, error });
+    // Keep only the recent window
+    if (this.recentToolResults.length > this.STUCK_DETECTION_WINDOW) {
+      this.recentToolResults.shift();
+    }
+  }
+
+  /**
+   * Detects if the agent is stuck in an unproductive loop
+   * Delegates to the utility function for testability
+   * Returns a reflection prompt if stuck, null otherwise
+   */
+  private detectStuckPattern(): string | null {
+    const result = detectStuckPatternUtil(this.recentToolResults, {
+      maxConsecutiveFailures: this.MAX_CONSECUTIVE_FAILURES,
+      stuckDetectionWindow: this.STUCK_DETECTION_WINDOW,
+      currentReflectionCount: this.reflectionCount,
+      maxReflectionsPerTurn: this.MAX_REFLECTIONS_PER_TURN
+    });
+
+    if (result.isStuck) {
+      this.reflectionCount++;
+      return result.reflection;
+    }
+
+    return null;
+  }
+
+  /**
+   * Clears the recent tool results and reflection count (call at the start of a new user message)
+   */
+  private clearToolResultTracking(): void {
+    this.recentToolResults = [];
+    this.reflectionCount = 0;
   }
 
   private async initializeMCP(): Promise<void> {
@@ -662,6 +754,9 @@ ${summary}
     const metrics = getMetricsCollector();
     const taskId = metrics.startTask(message);
 
+    // Clear tool result tracking for new conversation turn
+    this.clearToolResultTracking();
+
     // Manage context before adding new message
     await this.manageContext();
 
@@ -793,6 +888,13 @@ ${summary}
             // Record tool call metrics
             metrics.recordToolCall(toolCall.function.name, toolResult.success);
 
+            // Record for stuck detection
+            this.recordToolResult(
+              toolCall.function.name,
+              toolResult.success,
+              toolResult.error
+            );
+
             const toolResultEntry: ChatEntry = {
               type: "tool_result",
               content: toolResult.success
@@ -832,6 +934,23 @@ ${summary}
             type: "token_count",
             tokenCount: inputTokens + totalOutputTokens,
           };
+
+          // Check for stuck patterns and inject reflection if needed
+          const stuckReflection = this.detectStuckPattern();
+          if (stuckReflection) {
+            // Inject a system-level reflection prompt to help the agent recover
+            // Using "system" role to avoid polluting the conversation as fake user messages
+            this.messages.push({
+              role: "system",
+              content: stuckReflection
+            });
+
+            // Also yield as content so the user can see the reflection
+            yield {
+              type: "content",
+              content: `\n\n---\n*[System: Detected potential loop - prompting agent to reflect (${this.reflectionCount}/${this.MAX_REFLECTIONS_PER_TURN})]*\n---\n\n`,
+            };
+          }
 
           // Continue loop to get next response
           continue;

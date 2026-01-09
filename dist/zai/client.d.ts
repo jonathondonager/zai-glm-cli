@@ -34,6 +34,7 @@ export declare class ZaiClient {
     private client;
     private currentModel;
     private defaultMaxTokens;
+    private defaultTemperature;
     private thinkingEnabled;
     readonly apiKey: string;
     readonly baseURL: string;

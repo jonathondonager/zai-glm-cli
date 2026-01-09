@@ -3,6 +3,7 @@ export class ZaiClient {
     client;
     currentModel = "glm-4.7"; // Modèle par défaut avec support thinking
     defaultMaxTokens;
+    defaultTemperature;
     thinkingEnabled = false;
     apiKey;
     baseURL;
@@ -17,7 +18,11 @@ export class ZaiClient {
             dangerouslyAllowBrowser: false,
         });
         const envMax = Number(process.env.ZAI_MAX_TOKENS);
-        this.defaultMaxTokens = Number.isFinite(envMax) && envMax > 0 ? envMax : 1536;
+        // Increased default from 1536 to 4096 to allow for more complex reasoning
+        this.defaultMaxTokens = Number.isFinite(envMax) && envMax > 0 ? envMax : 4096;
+        // Temperature: 0.4 default for accuracy, configurable via ZAI_TEMPERATURE (0.0-1.0)
+        const envTemp = Number(process.env.ZAI_TEMPERATURE);
+        this.defaultTemperature = Number.isFinite(envTemp) && envTemp >= 0 && envTemp <= 1 ? envTemp : 0.4;
         if (model) {
             this.currentModel = model;
         }
@@ -58,7 +63,7 @@ export class ZaiClient {
                 messages,
                 tools: tools || [],
                 tool_choice: tools && tools.length > 0 ? "auto" : undefined,
-                temperature: 0.7,
+                temperature: this.defaultTemperature,
                 max_tokens: this.defaultMaxTokens,
             };
             // Add thinking parameter for GLM-4.7 and compatible models
@@ -80,7 +85,7 @@ export class ZaiClient {
                 messages,
                 tools: tools || [],
                 tool_choice: tools && tools.length > 0 ? "auto" : undefined,
-                temperature: 0.7,
+                temperature: this.defaultTemperature,
                 max_tokens: this.defaultMaxTokens,
                 stream: true,
             };

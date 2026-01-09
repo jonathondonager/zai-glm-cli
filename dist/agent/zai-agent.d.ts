@@ -50,6 +50,11 @@ export declare class ZaiAgent extends EventEmitter {
     private readonly MAX_MESSAGES;
     private readonly KEEP_RECENT_MESSAGES;
     private contextSummary;
+    private readonly MAX_CONSECUTIVE_FAILURES;
+    private readonly STUCK_DETECTION_WINDOW;
+    private readonly MAX_REFLECTIONS_PER_TURN;
+    private recentToolResults;
+    private reflectionCount;
     constructor(apiKey: string, baseURL?: string, model?: string, maxToolRounds?: number);
     /**
      * Estimates the total token count for an array of messages
@@ -57,8 +62,14 @@ export declare class ZaiAgent extends EventEmitter {
      */
     private estimateMessageTokens;
     /**
+     * Extracts critical information from messages that should be preserved verbatim
+     * Delegates to the utility function for testability
+     */
+    private extractCriticalInfo;
+    /**
      * Summarizes a range of conversation messages into a concise summary
      * Focuses on key decisions, file modifications, findings, and state
+     * Preserves critical information verbatim while summarizing the rest
      */
     private summarizeContext;
     /**
@@ -66,6 +77,20 @@ export declare class ZaiAgent extends EventEmitter {
      * Preserves system message, creates summary of old context, keeps recent messages
      */
     private manageContext;
+    /**
+     * Records a tool result for stuck detection
+     */
+    private recordToolResult;
+    /**
+     * Detects if the agent is stuck in an unproductive loop
+     * Delegates to the utility function for testability
+     * Returns a reflection prompt if stuck, null otherwise
+     */
+    private detectStuckPattern;
+    /**
+     * Clears the recent tool results and reflection count (call at the start of a new user message)
+     */
+    private clearToolResultTracking;
     private initializeMCP;
     processUserMessage(message: string): Promise<ChatEntry[]>;
     private messageReducer;
